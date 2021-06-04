@@ -10,19 +10,28 @@ namespace RandomGenerator
         {
             var min = 1;
             var max = 10;
+            var repeat = 1;
 
             if (args.Length >= 2)
             {
                 min = Convert.ToInt32(args[0]);
                 max = Convert.ToInt32(args[1]);
+
+                if (args.Length >= 3)
+                {
+                    repeat = Convert.ToInt32(args[2]);
+                }
             }
             else if (args.Length >= 1)
             {
                 max = Convert.ToInt32(args[0]);
             }
 
-            var next = _random.Next(min, max + 1);
-            Console.WriteLine("Random number between {0} and {1}: {2}", min, max, next);
+            for (var i = 0; i < repeat; i++)
+            {
+                var next = _random.Next(min, max + 1);
+                Console.WriteLine("Random number between {0} and {1}: {2}", min, max, next);
+            }
         }
     }
 }
