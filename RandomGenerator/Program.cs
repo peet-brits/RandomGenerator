@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 
 namespace RandomGenerator
 {
     class Program
     {
-        private static Random _random = new Random();
+        private static readonly Random _random = new();
 
         static void Main(string[] args)
         {
