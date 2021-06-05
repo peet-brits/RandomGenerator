@@ -19,3 +19,6 @@ Usage 2.2: raw numbers, as long as they are not the first item.
 dotnet run 2d6 5
 dotnet run 5d4 -3 -1d6
 dotnet run 10 2d6   ### incorrect ###
+
+Usage 2.3: Fudge dice: dF.
+dotnet run 4dF

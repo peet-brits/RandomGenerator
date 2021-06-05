@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace RandomGenerator
@@ -108,7 +107,9 @@ namespace RandomGenerator
 
                 for (int i = 0; i < die.Loop; i++)
                 {
-                    var next = _random.Next(1, die.Amount + 1);
+                    var next =
+                        die.Fudge ? _random.Next(-1, 2) :
+                        _random.Next(1, die.Amount + 1);
                     CalculateNextValue(next, die.Sign, sb, ref separator, ref total, ref counter);
                 }
             }
@@ -127,6 +128,17 @@ namespace RandomGenerator
 
         private static void CalculateNextValue(int next, Sign sign, StringBuilder sb, ref string separator, ref int total, ref int counter)
         {
+            if (next < 0)
+            {
+                next *= -1;
+                sign = sign switch
+                {
+                    Sign.Positive => sign = Sign.Negative,
+                    Sign.Negative => sign = Sign.Positive,
+                    _ => throw new Exception(string.Format("INTERNAL ERROR: Unknown sign: {0}", sign)),
+                };
+            }
+
             if (sign == Sign.Negative)
             {
                 total -= next;
@@ -152,20 +164,27 @@ namespace RandomGenerator
 
         public class Die
         {
-            private Die(int amount, int loop, Sign sign)
+            private Die(int amount, int loop, Sign sign, bool fudge)
             {
                 Amount = amount;
                 Loop = loop;
                 Sign = sign;
+                Fudge = fudge;
             }
 
             public int Amount { get; }
             public int Loop { get; }
-            public Sign Sign { get; set; }
+            public Sign Sign { get; }
+            public bool Fudge { get; }
 
-            public static Die Create(int amount, int loop = 1, Sign sign = Sign.Positive)
+            public static Die Create(int amount)
             {
-                return new Die(amount, loop, sign);
+                return new Die(amount, 1, Sign.Positive, false);
+            }
+
+            public static Die Create(int amount, int loop, Sign sign, bool fudge)
+            {
+                return new Die(amount, loop, sign, fudge);
             }
 
             public static Die Create(string amount, string loop, char sign)
@@ -177,13 +196,24 @@ namespace RandomGenerator
 
                 var parsedSign = GetSign(sign);
 
-                if (int.TryParse(amount, out var parsedAmount) &&
-                    int.TryParse(loop, out var parsedLoop))
+                var parsedAmount = 1;
+                var fudge = false;
+                if (amount.ToUpper() == "F")
+                {
+                    fudge = true;
+                }
+                else if (!int.TryParse(amount, out parsedAmount) || parsedAmount < 1)
+                {
+                    return null;
+                }
+
+                if (int.TryParse(loop, out var parsedLoop))
                 {
                     return Die.Create(
                         parsedAmount,
                         parsedLoop,
-                        parsedSign);
+                        parsedSign,
+                        fudge);
                 }
                 else
                 {
