@@ -10,3 +10,7 @@ Any number of arguments in the format [x]d<y>, e.g. roll a y-sided die x times.
 Example:
 dotnet run 3d10
 dotnet run 4d6 d12
+
+Usage 2.1: "+" and "-" signs, for example:
+dotnet run 4d10 -2d4
+dotnet run -d6 d20

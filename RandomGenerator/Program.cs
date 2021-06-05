@@ -51,19 +51,28 @@ namespace RandomGenerator
         private static void DieUsage(params string[] args)
         {
             var dieList = new List<Die>();
-            foreach (var arg in args)
+            foreach (var argRaw in args)
             {
-                var values = arg.ToLower().Split("d");
+                var sign = '+';
+                var argValue = argRaw;
+                if (argValue.StartsWith("+") ||
+                    argValue.StartsWith("-"))
+                {
+                    sign = argValue[0];
+                    argValue = argValue.Substring(1);
+                }
+
+                var values = argValue.ToLower().Split("d");
                 if (values.Length != 2)
                 {
-                    Console.WriteLine("Invalid format, expected e.g. 3d6 or d12: {0}", arg);
+                    Console.WriteLine("Invalid format, expected e.g. 3d6 or d12: {0}", argRaw);
                     return;
                 }
 
-                var die = Die.Create(values[1], values[0]);
+                var die = Die.Create(values[1], values[0], sign);
                 if (die == null)
                 {
-                    Console.WriteLine("Invalid format, parse failed: {0}", arg);
+                    Console.WriteLine("Invalid format, parse failed: {0}", argRaw);
                     return;
                 }
 
@@ -79,7 +88,25 @@ namespace RandomGenerator
                 for (int i = 0; i < die.Loop; i++)
                 {
                     var next = _random.Next(1, die.Amount + 1);
-                    total += next;
+
+                    if (die.Sign == Sign.Negative)
+                    {
+                        total -= next;
+
+                        if (separator != string.Empty)
+                        {
+                            separator = " - ";
+                        }
+                        else
+                        {
+                            separator = "-";
+                        }
+                    }
+                    else
+                    {
+                        total += next;
+                    }
+
                     sb.AppendFormat("{0}{1}", separator, next);
                     separator = " + ";
                     counter++;
@@ -100,37 +127,54 @@ namespace RandomGenerator
 
         public class Die
         {
-            private Die(int amount, int loop)
+            private Die(int amount, int loop, Sign sign)
             {
                 Amount = amount;
                 Loop = loop;
+                Sign = sign;
             }
 
             public int Amount { get; }
             public int Loop { get; }
+            public Sign Sign { get; set; }
 
-            public static Die Create(int amount, int loop = 1)
+            public static Die Create(int amount, int loop = 1, Sign sign = Sign.Positive)
             {
-                return new Die(amount, loop);
+                return new Die(amount, loop, sign);
             }
 
-            public static Die Create(string amount, string loop)
+            public static Die Create(string amount, string loop, char sign)
             {
                 if (loop == string.Empty)
                 {
                     loop = "1";
                 }
 
+                var parsedSign = Sign.Positive;
+                if (sign == '-')
+                {
+                    parsedSign = Sign.Negative;
+                }
+
                 if (int.TryParse(amount, out var parsedAmount) &&
                     int.TryParse(loop, out var parsedLoop))
                 {
-                    return Die.Create(parsedAmount, parsedLoop);
+                    return Die.Create(
+                        parsedAmount,
+                        parsedLoop,
+                        parsedSign);
                 }
                 else
                 {
                     return null;
                 }
             }
+        }
+
+        public enum Sign
+        {
+            Positive,
+            Negative,
         }
     }
 }
