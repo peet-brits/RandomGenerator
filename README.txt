@@ -1,11 +1,11 @@
-Generates a random number.
+Generate a random number.
 
 Usage 1:
 dotnet run
 dotnet run <max>
 dotnet run <min> <mix> [<repeat>]
 
-Usage 2:
+Usage 2: xdy.
 Any number of arguments in the format [x]d<y>, e.g. roll a y-sided die x times.
 Example:
 dotnet run 3d10
