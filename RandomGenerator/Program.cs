@@ -28,17 +28,35 @@ namespace RandomGenerator
 
             if (args.Length >= 2)
             {
-                min = Convert.ToInt32(args[0]);
-                max = Convert.ToInt32(args[1]);
+                if (!int.TryParse(args[0], out min) ||
+                    !int.TryParse(args[1], out max))
+                {
+                    Console.WriteLine("Unexpected minimum & maximum values: {0} {1}", args[0], args[1]);
+                    return;
+                }
 
                 if (args.Length >= 3)
                 {
-                    repeat = Convert.ToInt32(args[2]);
+                    if (!int.TryParse(args[2], out repeat))
+                    {
+                        Console.WriteLine("Unexpected repeat value: {0}", args[2]);
+                        return;
+                    }
                 }
             }
             else if (args.Length >= 1)
             {
-                max = Convert.ToInt32(args[0]);
+                if (!int.TryParse(args[0], out max))
+                {
+                    Console.WriteLine("Unexpected maximum value: {0}", args[0]);
+                    return;
+                }
+            }
+
+            if (min > max)
+            {
+                Console.WriteLine("The minimum value cannot be greater than the maximum value: {0} > {1}", min, max);
+                return;
             }
 
             for (var i = 0; i < repeat; i++)
@@ -50,9 +68,14 @@ namespace RandomGenerator
 
         private static void DieUsage(params string[] args)
         {
-            var dieList = new List<Die>();
+            var sb = new StringBuilder();
+            var separator = string.Empty;
+            var total = 0;
+            var counter = 0;
             foreach (var argRaw in args)
             {
+                // preparation
+
                 var sign = '+';
                 var argValue = argRaw;
                 if (argValue.StartsWith("+") ||
@@ -63,7 +86,12 @@ namespace RandomGenerator
                 }
 
                 var values = argValue.ToLower().Split("d");
-                if (values.Length != 2)
+                if (values.Length == 1 && int.TryParse(values[0], out var rawNumber))
+                {
+                    CalculateNextValue(rawNumber, Die.GetSign(sign), sb, ref separator, ref total, ref counter);
+                    continue;
+                }
+                else if (values.Length != 2)
                 {
                     Console.WriteLine("Invalid format, expected e.g. 3d6 or d12: {0}", argRaw);
                     return;
@@ -76,40 +104,12 @@ namespace RandomGenerator
                     return;
                 }
 
-                dieList.Add(die);
-            }
+                // calculation
 
-            var sb = new StringBuilder();
-            var separator = string.Empty;
-            var total = 0;
-            var counter = 0;
-            foreach (var die in dieList)
-            {
                 for (int i = 0; i < die.Loop; i++)
                 {
                     var next = _random.Next(1, die.Amount + 1);
-
-                    if (die.Sign == Sign.Negative)
-                    {
-                        total -= next;
-
-                        if (separator != string.Empty)
-                        {
-                            separator = " - ";
-                        }
-                        else
-                        {
-                            separator = "-";
-                        }
-                    }
-                    else
-                    {
-                        total += next;
-                    }
-
-                    sb.AppendFormat("{0}{1}", separator, next);
-                    separator = " + ";
-                    counter++;
+                    CalculateNextValue(next, die.Sign, sb, ref separator, ref total, ref counter);
                 }
             }
 
@@ -123,6 +123,31 @@ namespace RandomGenerator
             {
                 Console.WriteLine("Result: {0}", sb.ToString());
             }
+        }
+
+        private static void CalculateNextValue(int next, Sign sign, StringBuilder sb, ref string separator, ref int total, ref int counter)
+        {
+            if (sign == Sign.Negative)
+            {
+                total -= next;
+
+                if (separator != string.Empty)
+                {
+                    separator = " - ";
+                }
+                else
+                {
+                    separator = "-";
+                }
+            }
+            else
+            {
+                total += next;
+            }
+
+            sb.AppendFormat("{0}{1}", separator, next);
+            separator = " + ";
+            counter++;
         }
 
         public class Die
@@ -150,11 +175,7 @@ namespace RandomGenerator
                     loop = "1";
                 }
 
-                var parsedSign = Sign.Positive;
-                if (sign == '-')
-                {
-                    parsedSign = Sign.Negative;
-                }
+                var parsedSign = GetSign(sign);
 
                 if (int.TryParse(amount, out var parsedAmount) &&
                     int.TryParse(loop, out var parsedLoop))
@@ -168,6 +189,11 @@ namespace RandomGenerator
                 {
                     return null;
                 }
+            }
+
+            public static Sign GetSign(char sign)
+            {
+                return sign == '-' ? Sign.Negative : Sign.Positive;
             }
         }
 
