@@ -9,7 +9,11 @@ namespace RandomGenerator
 
         static void Main(string[] args)
         {
-            if (args.Length > 0 && args[0].ToLower().Contains("d"))
+            if (args.Length > 0 && args[0].Length == 1 && char.IsLetter(args[0][0]))
+            {
+                AlphabetUsage(args);
+            }
+            else if (args.Length > 0 && args[0].ToLower().Contains("d"))
             {
                 DieUsage(args);
             }
@@ -62,6 +66,62 @@ namespace RandomGenerator
             {
                 var next = _random.Next(min, max + 1);
                 Console.WriteLine("Random number between {0} and {1}: {2}", min, max, next);
+            }
+        }
+
+        private static void AlphabetUsage(params string[] args)
+        {
+            var min = 'A';
+            var max = 'Z';
+            var repeat = 1;
+
+            if (args.Length >= 2)
+            {
+                if (args[0].Length != 1 || !char.IsLetter(args[0][0]))
+                {
+                    Console.WriteLine("Unexpected letter: {0}", args[0].ToUpper());
+                    return;
+                }
+
+                if (args[1].Length != 1 || !char.IsLetter(args[1][0]))
+                {
+                    Console.WriteLine("Unexpected letter: {0}", args[1].ToUpper());
+                    return;
+                }
+
+                min = args[0].ToUpper()[0];
+                max = args[1].ToUpper()[0];
+
+                if (args.Length >= 3)
+                {
+                    if (!int.TryParse(args[2], out repeat))
+                    {
+                        Console.WriteLine("Unexpected repeat value: {0}", args[2]);
+                        return;
+                    }
+                }
+            }
+            else if (args.Length >= 1)
+            {
+                if (args[0].Length != 1 || !char.IsLetter(args[0][0]))
+                {
+                    Console.WriteLine("Unexpected letter: {0}", args[0].ToUpper());
+                    return;
+                }
+
+                max = args[0].ToUpper()[0];
+            }
+
+            if (min > max)
+            {
+                Console.WriteLine("The first letter cannot be after the second letter: {0} > {1}", min, max);
+                return;
+            }
+
+            for (var i = 0; i < repeat; i++)
+            {
+                var next = (char)(_random.Next(min, max + 1));
+                Console.WriteLine("Random letter between {0} and {1}: {2}", min, max, next);
             }
         }
 
