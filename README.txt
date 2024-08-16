@@ -1,5 +1,8 @@
 Generate a random number.
 
+Usage 0: If not in the main project folder.
+dotnet run --project .\RandomGenerator\ -- <...arguments...>
+
 Usage 1: Random number.
 dotnet run
 dotnet run <max>
